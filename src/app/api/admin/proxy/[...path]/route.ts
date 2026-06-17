@@ -17,6 +17,9 @@ interface ProxyContext {
 const hasBody = (method: HttpMethod): boolean =>
   method === "POST" || method === "PATCH";
 
+const isMultipart = (contentType: string | null): boolean =>
+  contentType?.startsWith("multipart/form-data") ?? false;
+
 async function handleProxy(
   method: HttpMethod,
   req: NextRequest,
@@ -43,21 +46,33 @@ async function handleProxy(
     }
   }
 
-  const requestBody = hasBody(method) ? await req.text() : undefined;
+  const requestContentType = req.headers.get("content-type");
+  const multipart = isMultipart(requestContentType);
+
+  const requestBody = hasBody(method)
+    ? multipart
+      ? req.body
+      : await req.text()
+    : undefined;
 
   const forwardRequest = async (token: string): Promise<Response> => {
     const headers: Record<string, string> = {
       Authorization: `Bearer ${token}`,
     };
-    const init: RequestInit = {
+    const init: RequestInit & { duplex?: "half" } = {
       method,
       headers,
       cache: "no-store",
     };
 
+    if (multipart) {
+      init.duplex = "half";
+    }
+
     if (requestBody !== undefined) {
-      headers["Content-Type"] =
-        req.headers.get("content-type") || "application/json";
+      if (!multipart) {
+        headers["Content-Type"] = requestContentType || "application/json";
+      }
       init.body = requestBody;
     }
 
@@ -79,12 +94,12 @@ async function handleProxy(
   }
 
   const responseBody = await response.text();
-  const contentType =
+  const responseContentType =
     response.headers.get("content-type") || "application/json";
 
   return new NextResponse(responseBody, {
     status: response.status,
-    headers: { "Content-Type": contentType },
+    headers: { "Content-Type": responseContentType },
   });
 }
 

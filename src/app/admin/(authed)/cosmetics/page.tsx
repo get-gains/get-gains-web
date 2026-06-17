@@ -31,7 +31,7 @@ export default function AdminCosmeticsPage(): React.JSX.Element {
   const fetchCosmetics = async (): Promise<void> => {
     try {
       const res = await adminFetchClient<CosmeticsResponse>(
-        "/admin/cosmetics?limit=100",
+        "/cosmetics?limit=100",
       );
       setCosmetics(res.cosmetics);
     } finally {

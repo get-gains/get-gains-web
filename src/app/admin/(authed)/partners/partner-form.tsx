@@ -64,12 +64,12 @@ export function PartnerForm({
       };
 
       if (partner) {
-        await adminFetchClient(`/admin/partners/${partner.id}`, {
+        await adminFetchClient(`/partners/${partner.id}`, {
           method: "PATCH",
           body: JSON.stringify(payload),
         });
       } else {
-        await adminFetchClient("/admin/partners", {
+        await adminFetchClient("/partners", {
           method: "POST",
           body: JSON.stringify(payload),
         });

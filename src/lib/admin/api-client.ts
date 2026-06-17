@@ -20,6 +20,15 @@ export async function adminFetchClient<T>(
   path: string,
   init: RequestInit = {},
 ): Promise<T> {
+  if (
+    process.env.NODE_ENV !== "production" &&
+    (path === "/admin" || path.startsWith("/admin/"))
+  ) {
+    console.warn(
+      `[adminFetchClient] path should be relative to /api/admin/proxy, got "${path}". Drop the leading "/admin" segment to avoid double-prefixing.`,
+    );
+  }
+
   const headers = new Headers(init.headers);
 
   if (init.body !== undefined && !(init.body instanceof FormData)) {

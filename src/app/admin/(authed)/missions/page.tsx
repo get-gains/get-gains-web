@@ -43,8 +43,8 @@ export default function AdminMissionsPage(): React.JSX.Element {
   const fetchAll = async (): Promise<void> => {
     try {
       const [missionsRes, partnersRes] = await Promise.all([
-        adminFetchClient<MissionsResponse>("/admin/missions?limit=100"),
-        adminFetchClient<PartnersResponse>("/admin/partners?limit=100"),
+        adminFetchClient<MissionsResponse>("/missions?limit=100"),
+        adminFetchClient<PartnersResponse>("/partners?limit=100"),
       ]);
       setMissions(missionsRes.missions);
       setPartners(partnersRes.partners);

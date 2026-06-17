@@ -37,7 +37,7 @@ export function DrawWinnersDialog({
     setError(null);
 
     try {
-      await adminFetchClient(`/admin/missions/${mission.id}/draw-winners`, {
+      await adminFetchClient(`/missions/${mission.id}/draw-winners`, {
         method: "POST",
         body: JSON.stringify({ winnerCount }),
       });

@@ -102,12 +102,12 @@ export function CosmeticForm({
       };
 
       if (cosmetic) {
-        await adminFetchClient(`/admin/cosmetics/${cosmetic.id}`, {
+        await adminFetchClient(`/cosmetics/${cosmetic.id}`, {
           method: "PATCH",
           body: JSON.stringify(payload),
         });
       } else {
-        await adminFetchClient("/admin/cosmetics", {
+        await adminFetchClient("/cosmetics", {
           method: "POST",
           body: JSON.stringify(payload),
         });

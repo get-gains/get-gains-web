@@ -135,12 +135,12 @@ export function MissionForm({
       };
 
       if (mission) {
-        await adminFetchClient(`/admin/missions/${mission.id}`, {
+        await adminFetchClient(`/missions/${mission.id}`, {
           method: "PATCH",
           body: JSON.stringify(payload),
         });
       } else {
-        await adminFetchClient("/admin/missions", {
+        await adminFetchClient("/missions", {
           method: "POST",
           body: JSON.stringify(payload),
         });

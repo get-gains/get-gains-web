@@ -125,6 +125,7 @@ export default function AdminCosmeticsPage(): React.JSX.Element {
       )}
 
       <CosmeticForm
+        key={editing?.id ?? "new"}
         cosmetic={editing}
         open={formOpen}
         onOpenChange={(open) => {

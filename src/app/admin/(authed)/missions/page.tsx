@@ -14,8 +14,9 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ChevronDown, ChevronUp } from "lucide-react";
 import { adminFetchClient } from "@/lib/admin/api-client";
-import type { Mission, Partner } from "@/lib/admin/types";
+import type { Mission, Partner, RaffleWinner } from "@/lib/admin/types";
 import { MissionForm } from "./mission-form";
 import { DrawWinnersDialog } from "./draw-winners-dialog";
 import { PartnerForm } from "../partners/partner-form";
@@ -39,6 +40,13 @@ export default function AdminMissionsPage(): React.JSX.Element {
   const [editingMission, setEditingMission] = useState<Mission | null>(null);
   const [editingPartner, setEditingPartner] = useState<Partner | null>(null);
   const [drawingMission, setDrawingMission] = useState<Mission | null>(null);
+  const [expandedWinners, setExpandedWinners] = useState<Set<string>>(
+    new Set(),
+  );
+  const [winnersMap, setWinnersMap] = useState<Record<string, RaffleWinner[]>>(
+    {},
+  );
+  const [loadingWinners, setLoadingWinners] = useState<Set<string>>(new Set());
 
   const fetchAll = async (): Promise<void> => {
     try {
@@ -87,6 +95,38 @@ export default function AdminMissionsPage(): React.JSX.Element {
     setPartnerFormOpen(true);
   };
 
+  const toggleWinners = async (missionId: string): Promise<void> => {
+    const next = new Set(expandedWinners);
+    if (next.has(missionId)) {
+      next.delete(missionId);
+      setExpandedWinners(next);
+      return;
+    }
+    next.add(missionId);
+    setExpandedWinners(next);
+
+    if (!winnersMap[missionId]) {
+      setLoadingWinners((prev) => new Set(prev).add(missionId));
+      try {
+        const data = await adminFetchClient<{ winners: RaffleWinner[] }>(
+          `/missions/${missionId}/winners`,
+        );
+        setWinnersMap((prev) => ({
+          ...prev,
+          [missionId]: data.winners,
+        }));
+      } catch {
+        // silently ignore
+      } finally {
+        setLoadingWinners((prev) => {
+          const next = new Set(prev);
+          next.delete(missionId);
+          return next;
+        });
+      }
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -129,54 +169,126 @@ export default function AdminMissionsPage(): React.JSX.Element {
                     <TableHead>Partner</TableHead>
                     <TableHead>Reward</TableHead>
                     <TableHead>Status</TableHead>
+                    <TableHead>Winners</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredMissions.map((mission) => (
-                    <TableRow key={mission.id}>
-                      <TableCell className="font-medium">
-                        {mission.title}
-                      </TableCell>
-                      <TableCell>{mission.partner?.name ?? "—"}</TableCell>
-                      <TableCell>
-                        <Badge variant="secondary">{mission.rewardType}</Badge>
-                      </TableCell>
-                      <TableCell>
-                        {mission.isClosed ? (
-                          <Badge variant="destructive">Closed</Badge>
-                        ) : (
-                          <Badge variant="default">Active</Badge>
-                        )}
-                      </TableCell>
-                      <TableCell className="space-x-2 text-right">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => openEditMission(mission)}
-                        >
-                          Edit
-                        </Button>
-                        {mission.rewardType === "RAFFLE" &&
-                          !mission.isClosed && (
+                  {filteredMissions.map((mission) => {
+                    const isRaffleClosed =
+                      mission.rewardType === "RAFFLE" && mission.isClosed;
+                    const hasWinners = mission.stats.winners > 0;
+                    const showWinnerToggle = isRaffleClosed && hasWinners;
+                    const isExpanded = expandedWinners.has(mission.id);
+
+                    return (
+                      <React.Fragment key={mission.id}>
+                        <TableRow>
+                          <TableCell className="font-medium">
+                            {mission.title}
+                          </TableCell>
+                          <TableCell>{mission.partner?.name ?? "—"}</TableCell>
+                          <TableCell>
+                            <Badge variant="secondary">
+                              {mission.rewardType}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            {mission.isClosed ? (
+                              <Badge variant="destructive">Closed</Badge>
+                            ) : (
+                              <Badge variant="default">Active</Badge>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            {showWinnerToggle ? (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => void toggleWinners(mission.id)}
+                                className="gap-1"
+                              >
+                                {mission.stats.winners}
+                                {isExpanded ? (
+                                  <ChevronUp className="h-4 w-4" />
+                                ) : (
+                                  <ChevronDown className="h-4 w-4" />
+                                )}
+                              </Button>
+                            ) : mission.rewardType === "RAFFLE" ? (
+                              <span className="text-muted-foreground text-sm">
+                                Not drawn
+                              </span>
+                            ) : (
+                              <span className="text-muted-foreground text-sm">
+                                —
+                              </span>
+                            )}
+                          </TableCell>
+                          <TableCell className="space-x-2 text-right">
                             <Button
-                              variant="secondary"
+                              variant="outline"
                               size="sm"
-                              onClick={() => setDrawingMission(mission)}
+                              onClick={() => openEditMission(mission)}
                             >
-                              Draw
+                              Edit
                             </Button>
-                          )}
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          onClick={() => void handleDeleteMission(mission.id)}
-                        >
-                          Close
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                            {mission.rewardType === "RAFFLE" &&
+                              !mission.isClosed && (
+                                <Button
+                                  variant="secondary"
+                                  size="sm"
+                                  onClick={() => setDrawingMission(mission)}
+                                >
+                                  Draw
+                                </Button>
+                              )}
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              onClick={() =>
+                                void handleDeleteMission(mission.id)
+                              }
+                            >
+                              Close
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                        {showWinnerToggle && isExpanded && (
+                          <TableRow>
+                            <TableCell colSpan={6} className="bg-muted/30 p-0">
+                              {loadingWinners.has(mission.id) ? (
+                                <p className="text-muted-foreground px-6 py-3 text-sm">
+                                  Loading winners...
+                                </p>
+                              ) : (
+                                <div className="px-6 py-3">
+                                  <Table>
+                                    <TableHeader>
+                                      <TableRow>
+                                        <TableHead>Rank</TableHead>
+                                        <TableHead>Name</TableHead>
+                                        <TableHead>Email</TableHead>
+                                      </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                      {winnersMap[mission.id]?.map((w) => (
+                                        <TableRow key={w.userId}>
+                                          <TableCell>{w.rank}</TableCell>
+                                          <TableCell>{w.fullName}</TableCell>
+                                          <TableCell>{w.email}</TableCell>
+                                        </TableRow>
+                                      ))}
+                                    </TableBody>
+                                  </Table>
+                                </div>
+                              )}
+                            </TableCell>
+                          </TableRow>
+                        )}
+                      </React.Fragment>
+                    );
+                  })}
                 </TableBody>
               </Table>
             </div>
@@ -229,6 +341,7 @@ export default function AdminMissionsPage(): React.JSX.Element {
       </Tabs>
 
       <MissionForm
+        key={editingMission?.id ?? "new"}
         mission={editingMission}
         partners={partners}
         open={missionFormOpen}
@@ -240,6 +353,7 @@ export default function AdminMissionsPage(): React.JSX.Element {
       />
 
       <PartnerForm
+        key={editingPartner?.id ?? "new"}
         partner={editingPartner}
         open={partnerFormOpen}
         onOpenChange={(open) => {

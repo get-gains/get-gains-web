@@ -1,7 +1,7 @@
 "use client";
 import * as React from "react";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 
 interface ImageUploadProps {
@@ -24,8 +24,40 @@ export function ImageUpload({
   onUploaded,
 }: ImageUploadProps) {
   const [uploading, setUploading] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function resolveUrl(key: string) {
+      try {
+        const res = await fetch(
+          `/api/admin/proxy/upload/image-url?key=${encodeURIComponent(key)}`,
+        );
+        const json = (await res.json()) as {
+          data?: { url: string };
+          errors?: Array<{ message: string }>;
+        };
+        if (!cancelled && json.data?.url) {
+          setPreviewUrl(json.data.url);
+        }
+      } catch {
+        if (!cancelled) setPreviewUrl(null);
+      }
+    }
+
+    if (currentKey) {
+      resolveUrl(currentKey);
+    } else {
+      setPreviewUrl(null);
+    }
+
+    return () => {
+      cancelled = true;
+    };
+  }, [currentKey]);
 
   const handleFileChange = async (
     e: React.ChangeEvent<HTMLInputElement>,
@@ -57,6 +89,7 @@ export function ImageUpload({
       }
 
       onUploaded(json.data!.key);
+      setPreviewUrl(URL.createObjectURL(file));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Upload failed");
     } finally {
@@ -69,8 +102,15 @@ export function ImageUpload({
 
   return (
     <div className="space-y-2">
-      {currentKey && (
-        <p className="text-muted-foreground text-xs break-all">{currentKey}</p>
+      {previewUrl && (
+        <div className="relative h-32 w-32 overflow-hidden rounded-md border">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={previewUrl}
+            alt="Preview"
+            className="h-full w-full object-cover"
+          />
+        </div>
       )}
       <Input
         ref={inputRef}

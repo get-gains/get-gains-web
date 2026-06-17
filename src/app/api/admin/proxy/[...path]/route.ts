@@ -67,6 +67,7 @@ async function handleProxy(
 
     if (multipart) {
       init.duplex = "half";
+      headers["Content-Type"] = requestContentType!;
     }
 
     if (requestBody !== undefined) {

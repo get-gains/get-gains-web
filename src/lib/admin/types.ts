@@ -192,3 +192,10 @@ export interface Cosmetic {
   createdAt: string;
   updatedAt: string;
 }
+
+export interface RaffleWinner {
+  userId: string;
+  rank: number;
+  email: string;
+  fullName: string;
+}

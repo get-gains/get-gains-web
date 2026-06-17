@@ -39,11 +39,35 @@ export interface InvitationAnalytics {
   pending: number;
   revoked: number;
   redeemedThisPeriod: number;
+  totalRedeemed: number;
 }
 
 export interface EngagementAnalytics {
   workoutsCompletedThisPeriod: number;
   avgWorkoutsPerUserThisPeriod: number;
+}
+
+export interface EngagementSeriesPoint {
+  date: string;
+  workoutsCompleted: number;
+  avgWorkoutsPerUser: number;
+}
+
+export interface UserSeriesPoint {
+  date: string;
+  newUsers: number;
+  cumulativeUsers: number;
+}
+
+export interface CoachSeriesPoint {
+  date: string;
+  newCoaches: number;
+  cumulativeCoaches: number;
+}
+
+export interface InvitationSeriesPoint {
+  date: string;
+  redeemedInvites: number;
 }
 
 export interface AnalyticsResponse {
@@ -52,6 +76,10 @@ export interface AnalyticsResponse {
   users: UserAnalytics;
   invitations: InvitationAnalytics;
   engagement: EngagementAnalytics;
+  engagementSeries: EngagementSeriesPoint[];
+  userSeries: UserSeriesPoint[];
+  coachSeries: CoachSeriesPoint[];
+  invitationSeries: InvitationSeriesPoint[];
 }
 
 export interface CoachAdminListItem {

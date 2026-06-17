@@ -16,13 +16,17 @@ import type { CoachAdminListItem, InvitationListItem } from "@/lib/admin/types";
 type Tab = "coaches" | "invitations";
 
 interface CoachesResponse {
-  coaches: CoachAdminListItem[];
-  pagination: { total: number };
+  data: {
+    coaches: CoachAdminListItem[];
+    pagination: { total: number };
+  };
 }
 
 interface InvitationsResponse {
-  invitations: InvitationListItem[];
-  pagination: { total: number };
+  data: {
+    invitations: InvitationListItem[];
+    pagination: { total: number };
+  };
 }
 
 function formatDate(value: string | null): string {
@@ -84,8 +88,8 @@ export default function AdminManagePage() {
           (await invitationsRes.json()) as InvitationsResponse;
 
         if (!cancelled) {
-          setCoaches(coachesJson.coaches);
-          setInvitations(invitationsJson.invitations);
+          setCoaches(coachesJson.data.coaches);
+          setInvitations(invitationsJson.data.invitations);
         }
       } catch (err) {
         if (!cancelled) {

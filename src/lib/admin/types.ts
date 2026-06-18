@@ -119,3 +119,83 @@ export interface PaginatedResponse<T> {
     | T[]
     | { total: number; limit: number; offset: number; hasMore: boolean };
 }
+
+export type RewardType = "COINS" | "RAFFLE" | "COUPON";
+
+export type CosmeticCategory = "HEADWEAR" | "TOP" | "BOTTOM" | "ACCESSORY";
+
+export type CosmeticStatus = "ACTIVE" | "INACTIVE";
+
+export interface MissionPartnerSummary {
+  id: string;
+  name: string;
+  logoKey: string;
+}
+
+export interface MissionCoupon {
+  id: string;
+  offerTag: string;
+  description: string | null;
+  discountPercent: number;
+}
+
+export interface Mission {
+  id: string;
+  partnerId: string | null;
+  title: string;
+  description: string;
+  goalType: string;
+  goalToReach: number;
+  rewardType: RewardType;
+  rewardCoins: number;
+  rewardTitle: string | null;
+  rewardDescription: string | null;
+  rewardImageKey: string | null;
+  maxWinners: number | null;
+  isRepeatable: boolean;
+  isClosed: boolean;
+  startsAt: string | null;
+  endsAt: string | null;
+  partner: MissionPartnerSummary | null;
+  coupon: MissionCoupon | null;
+  stats: {
+    completions: number;
+    winners: number;
+  };
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Partner {
+  id: string;
+  name: string;
+  logoKey: string;
+  bio: string;
+  socialLinks: string[];
+  missionCount: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Cosmetic {
+  id: string;
+  name: string;
+  description: string;
+  tier: number;
+  price: number;
+  previewImageKey: string;
+  unityAssetRef: string;
+  category: CosmeticCategory;
+  status: CosmeticStatus;
+  sortOrder: number;
+  deletedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface RaffleWinner {
+  userId: string;
+  rank: number;
+  email: string;
+  fullName: string;
+}

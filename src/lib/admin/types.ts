@@ -101,7 +101,6 @@ export interface CoachAdminListItem {
 export interface InvitationListItem {
   id: string;
   email: string;
-  code: string;
   status: "PENDING" | "REDEEMED" | "REVOKED";
   attempts: number;
   maxAttempts: number;

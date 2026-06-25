@@ -395,7 +395,6 @@ export default function AdminManagePage() {
             <thead className="bg-secondary text-muted-foreground">
               <tr>
                 <th className="px-6 py-3 font-medium">Email</th>
-                <th className="px-6 py-3 font-medium">Code</th>
                 <th className="px-6 py-3 font-medium">Status</th>
                 <th className="px-6 py-3 font-medium">Expires</th>
                 <th className="px-6 py-3 font-medium">Created by</th>
@@ -407,9 +406,6 @@ export default function AdminManagePage() {
                 <tr key={invite.id} className="hover:bg-secondary/50">
                   <td className="text-foreground px-6 py-4 font-medium">
                     {invite.email}
-                  </td>
-                  <td className="text-muted-foreground px-6 py-4 font-mono">
-                    {invite.code}
                   </td>
                   <td className="px-6 py-4">
                     <span
@@ -445,7 +441,7 @@ export default function AdminManagePage() {
               {invitations.length === 0 && (
                 <tr>
                   <td
-                    colSpan={6}
+                    colSpan={5}
                     className="text-muted-foreground px-6 py-12 text-center"
                   >
                     No invitations found.

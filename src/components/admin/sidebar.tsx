@@ -1,0 +1,34 @@
+import { Dumbbell } from "lucide-react";
+import { requireAdminSession } from "@/lib/admin/auth.server";
+import { AdminNavLinks } from "./nav-links";
+import { AdminLogoutButton } from "./logout-button";
+
+/**
+ * Admin sidebar with navigation and user info.
+ */
+export async function AdminSidebar() {
+  const session = await requireAdminSession();
+
+  return (
+    <aside className="border-border bg-card flex h-screen w-64 flex-col border-r">
+      <div className="flex items-center gap-2 p-6">
+        <div className="from-primary to-warning text-primary-foreground flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br">
+          <Dumbbell className="h-6 w-6" />
+        </div>
+        <span className="text-lg font-bold tracking-tight">Get Gains</span>
+      </div>
+
+      <AdminNavLinks />
+
+      <div className="border-border border-t p-4">
+        <p className="text-foreground truncate text-sm font-semibold">
+          {session.user.full_name || session.user.email}
+        </p>
+        <p className="text-muted-foreground truncate text-xs">
+          {session.user.email}
+        </p>
+        <AdminLogoutButton />
+      </div>
+    </aside>
+  );
+}

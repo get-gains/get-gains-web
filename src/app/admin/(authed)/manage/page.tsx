@@ -146,47 +146,46 @@ export default function AdminManagePage() {
       setError("");
 
       try {
-        const fetches: Promise<Response>[] = [
+        const [coachesRes, invitationsRes, ...rest] = await Promise.all([
           fetch("/api/admin/proxy/coaches?limit=100", { cache: "no-store" }),
           fetch("/api/admin/proxy/invitations?limit=100", {
             cache: "no-store",
           }),
-        ];
+          fetch("/api/admin/proxy/auth/me", { cache: "no-store" }),
+        ]);
 
-        const mePromise = fetch("/api/admin/proxy/auth/me", {
-          cache: "no-store",
-        });
+        const isAdminsTab = mainTab === "admins";
+        let adminsRes: Response | undefined;
+        let adminInvitesRes: Response | undefined;
 
-        if (mainTab === "admins") {
-          fetches.push(
+        if (isAdminsTab) {
+          [adminsRes, adminInvitesRes] = await Promise.all([
             fetch("/api/admin/proxy/admins", { cache: "no-store" }),
             fetch("/api/admin/proxy/admins/invitations?limit=100", {
               cache: "no-store",
             }),
-          );
+          ]);
         }
 
-        const results = await Promise.all([...fetches, mePromise]);
-
         if (!cancelled) {
-          const coachesJson = (await results[0].json()) as CoachesResponse;
+          const coachesJson = (await coachesRes.json()) as CoachesResponse;
           setCoaches(coachesJson.data.coaches);
 
           const invitationsJson =
-            (await results[1].json()) as InvitationsResponse;
+            (await invitationsRes.json()) as InvitationsResponse;
           setInvitations(invitationsJson.data.invitations);
 
-          if (results[2]) {
-            const adminsJson = (await results[2].json()) as AdminsResponse;
-            setAdmins(adminsJson.data.admins);
+          if (isAdminsTab && adminsRes) {
+            const adminsJson = (await adminsRes.json()) as AdminsResponse;
+            setAdmins(adminsJson.data.admins ?? []);
           }
-          if (results[3]) {
+          if (isAdminsTab && adminInvitesRes) {
             const adminInvJson =
-              (await results[3].json()) as AdminInvitationsData;
-            setAdminInvitations(adminInvJson.data.invitations);
+              (await adminInvitesRes.json()) as AdminInvitationsData;
+            setAdminInvitations(adminInvJson.data.invitations ?? []);
           }
 
-          const meRes = results[results.length - 1];
+          const meRes = rest[0];
           if (meRes.ok) {
             const meJson = (await meRes.json()) as {
               data: { user: { scopes: AdminScope[] } };

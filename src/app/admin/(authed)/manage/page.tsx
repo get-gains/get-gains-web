@@ -129,6 +129,9 @@ export default function AdminManagePage() {
 
   const [removeLoading, setRemoveLoading] = useState<string | null>(null);
 
+  const [canManageAdmins, setCanManageAdmins] = useState<boolean>(false);
+  const [scopesFetched, setScopesFetched] = useState<boolean>(false);
+
   const [editingAdmin, setEditingAdmin] = useState<AdminWithScopes | null>(
     null,
   );
@@ -150,6 +153,10 @@ export default function AdminManagePage() {
           }),
         ];
 
+        const mePromise = fetch("/api/admin/proxy/auth/me", {
+          cache: "no-store",
+        });
+
         if (mainTab === "admins") {
           fetches.push(
             fetch("/api/admin/proxy/admins", { cache: "no-store" }),
@@ -159,7 +166,7 @@ export default function AdminManagePage() {
           );
         }
 
-        const results = await Promise.all(fetches);
+        const results = await Promise.all([...fetches, mePromise]);
 
         if (!cancelled) {
           const coachesJson = (await results[0].json()) as CoachesResponse;
@@ -178,6 +185,19 @@ export default function AdminManagePage() {
               (await results[3].json()) as AdminInvitationsData;
             setAdminInvitations(adminInvJson.data.invitations);
           }
+
+          const meRes = results[results.length - 1];
+          if (meRes.ok) {
+            const meJson = (await meRes.json()) as {
+              data: { user: { scopes: AdminScope[] } };
+            };
+            const scopes = meJson.data.user.scopes;
+            setCanManageAdmins(
+              scopes.includes("super_admin") ||
+                scopes.includes("manage_admins"),
+            );
+          }
+          setScopesFetched(true);
         }
       } catch (err) {
         if (!cancelled) {
@@ -504,18 +524,20 @@ export default function AdminManagePage() {
           <Users className="h-4 w-4" />
           Coaches
         </button>
-        <button
-          type="button"
-          onClick={() => setMainTab("admins")}
-          className={`flex items-center gap-2 border-b-2 px-4 py-3 text-sm font-medium transition-colors ${
-            mainTab === "admins"
-              ? "border-primary text-primary"
-              : "text-muted-foreground hover:text-foreground border-transparent"
-          }`}
-        >
-          <Shield className="h-4 w-4" />
-          Admins
-        </button>
+        {(!scopesFetched || canManageAdmins) && (
+          <button
+            type="button"
+            onClick={() => setMainTab("admins")}
+            className={`flex items-center gap-2 border-b-2 px-4 py-3 text-sm font-medium transition-colors ${
+              mainTab === "admins"
+                ? "border-primary text-primary"
+                : "text-muted-foreground hover:text-foreground border-transparent"
+            }`}
+          >
+            <Shield className="h-4 w-4" />
+            Admins
+          </button>
+        )}
       </div>
 
       {/* Coaches tab */}

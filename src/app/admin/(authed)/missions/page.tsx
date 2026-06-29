@@ -341,7 +341,7 @@ export default function AdminMissionsPage(): React.JSX.Element {
       </Tabs>
 
       <MissionForm
-        key={editingMission?.id ?? "new"}
+        key={`mission-${editingMission?.id ?? "new"}`}
         mission={editingMission}
         partners={partners}
         open={missionFormOpen}
@@ -353,7 +353,7 @@ export default function AdminMissionsPage(): React.JSX.Element {
       />
 
       <PartnerForm
-        key={editingPartner?.id ?? "new"}
+        key={`partner-${editingPartner?.id ?? "new"}`}
         partner={editingPartner}
         open={partnerFormOpen}
         onOpenChange={(open) => {

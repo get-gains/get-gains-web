@@ -3,6 +3,16 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Dumbbell, Loader2 } from "lucide-react";
+import type { AdminScope } from "@/lib/admin/types";
+
+interface LoginResponse {
+  data?: {
+    user?: {
+      scopes?: AdminScope[];
+    };
+  };
+  errors?: ApiError[];
+}
 
 interface LoginFormData {
   email: string;
@@ -11,6 +21,24 @@ interface LoginFormData {
 
 interface ApiError {
   message: string;
+}
+
+const SCOPE_ROUTES: Array<{ scope: AdminScope; route: string }> = [
+  { scope: "manage_analytics", route: "/admin/dashboard" },
+  { scope: "manage_coaches", route: "/admin/manage" },
+  { scope: "manage_admins", route: "/admin/manage" },
+  { scope: "manage_missions", route: "/admin/missions" },
+  { scope: "manage_partners", route: "/admin/missions" },
+  { scope: "manage_cosmetics", route: "/admin/cosmetics" },
+];
+
+function firstAccessibleRoute(scopes: AdminScope[]): string {
+  for (const { scope, route } of SCOPE_ROUTES) {
+    if (scopes.includes("super_admin") || scopes.includes(scope)) {
+      return route;
+    }
+  }
+  return "/admin/dashboard";
 }
 
 /**
@@ -47,9 +75,7 @@ export default function AdminLoginPage() {
         body: JSON.stringify(form),
       });
 
-      const json = (await response.json()) as {
-        errors?: ApiError[];
-      };
+      const json = (await response.json()) as LoginResponse;
 
       if (!response.ok) {
         setError(json.errors?.[0]?.message || "Login failed");
@@ -57,7 +83,20 @@ export default function AdminLoginPage() {
         return;
       }
 
-      router.push("/admin/dashboard");
+      const inviteToken =
+        typeof window !== "undefined"
+          ? (new URLSearchParams(window.location.search).get("invite_token") ??
+            "")
+          : "";
+
+      if (inviteToken) {
+        router.push(
+          `/admin/accept-invite?token=${encodeURIComponent(inviteToken)}`,
+        );
+      } else {
+        const scopes = json.data?.user?.scopes ?? [];
+        router.push(firstAccessibleRoute(scopes as AdminScope[]));
+      }
       router.refresh();
     } catch {
       setError("An unexpected error occurred. Please try again.");

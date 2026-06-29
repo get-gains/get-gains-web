@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { API_URL } from "@/lib/constants";
+import type { AdminScope } from "@/lib/admin/types";
 
 export const ADMIN_ACCESS_COOKIE = "admin_access_token";
 export const ADMIN_REFRESH_COOKIE = "admin_refresh_token";
@@ -10,6 +11,7 @@ export interface AdminUser {
   supabase_auth_id: string;
   email: string;
   full_name: string;
+  scopes: AdminScope[];
 }
 
 export interface AdminSession {
@@ -54,6 +56,17 @@ export async function getAdminSession(): Promise<AdminSession | null> {
   } catch {
     return null;
   }
+}
+
+/**
+ * Check whether an admin session holds a specific scope.
+ * `super_admin` scope automatically grants all scopes.
+ */
+export function hasScope(session: AdminSession, scope: AdminScope): boolean {
+  return (
+    session.user.scopes.includes("super_admin") ||
+    session.user.scopes.includes(scope)
+  );
 }
 
 /**

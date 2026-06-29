@@ -18,7 +18,7 @@ export async function AdminSidebar() {
         <span className="text-lg font-bold tracking-tight">Get Gains</span>
       </div>
 
-      <AdminNavLinks />
+      <AdminNavLinks scopes={session.user.scopes} />
 
       <div className="border-border border-t p-4">
         <p className="text-foreground truncate text-sm font-semibold">

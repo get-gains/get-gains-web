@@ -10,6 +10,7 @@ interface LoginResponse {
       supabase_auth_id: string;
       email: string;
       full_name: string;
+      scopes?: string[];
     };
   };
 }
@@ -40,7 +41,21 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   const json = (await response.json()) as LoginResponse;
   const { accessToken, refreshToken, user } = json.data;
 
-  await setAdminSession(accessToken, refreshToken, user);
+  await setAdminSession(accessToken, refreshToken, {
+    supabase_auth_id: user.supabase_auth_id,
+    email: user.email,
+    full_name: user.full_name,
+    scopes: (user.scopes ?? []) as Array<
+      | "super_admin"
+      | "manage_admins"
+      | "manage_coaches"
+      | "manage_cosmetics"
+      | "manage_missions"
+      | "manage_partners"
+      | "manage_analytics"
+      | "manage_uploads"
+    >,
+  });
 
   return NextResponse.json({ data: { user } });
 }

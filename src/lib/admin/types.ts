@@ -1,7 +1,43 @@
+export type AdminScope =
+  | "super_admin"
+  | "manage_admins"
+  | "manage_coaches"
+  | "manage_cosmetics"
+  | "manage_missions"
+  | "manage_partners"
+  | "manage_analytics"
+  | "manage_uploads";
+
 export interface AdminUser {
   supabase_auth_id: string;
   email: string;
   full_name: string;
+  scopes: AdminScope[];
+}
+
+export interface AdminInvitation {
+  id: string;
+  email: string;
+  scopes: AdminScope[];
+  status: "PENDING" | "ACCEPTED" | "REVOKED" | "EXPIRED";
+  attempts: number;
+  maxAttempts: number;
+  expiresAt: string;
+  createdBy: { email: string; fullName: string } | null;
+  acceptedBy: string | null;
+  acceptedAt: string | null;
+  revokedBy: string | null;
+  revokedAt: string | null;
+  createdAt: string;
+}
+
+export interface AdminWithScopes {
+  supabase_auth_id: string;
+  email: string;
+  full_name: string;
+  scopes: AdminScope[];
+  status: "active" | "deactivated";
+  createdAt: string;
 }
 
 export interface AnalyticsPeriod {
